@@ -1,8 +1,8 @@
-POSTGRES_NAME=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=postgres
-POSTGRES_HOST_AUTH_METHOD=trust
+export POSTGRES_NAME=localhost
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=postgres
+export POSTGRES_DB=postgres
+export POSTGRES_HOST_AUTH_METHOD=trust
 
 # PGRST_DB_URI= postgres://authenticator:password@postgres:5432/postgres
 # PGRST_DB_SCHEMA= public

@@ -1,0 +1,61 @@
+version: '3.7'
+
+services:
+  # pocket:
+  #   container_name: pocket
+  #   cap_add:
+  #   - ALL
+  #   build: ./pocket/
+  #   ports:
+  #   - "26657:26657"
+  #   - "8081:8081"
+  #   - "26656:26656"
+  #   volumes:
+  #   - "./data/pocket/:/root/.pocket/"
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+      # - ./postgres:/docker-entrypoint-initdb.d
+#  indexer:
+#    container_name: indexer
+#    build: ./indexer
+#    env_file:
+#      - .env
+#    depends_on:
+#      - postgres
+      # - pocket
+  # postgrest:
+  #   container_name: postgrest
+  #   image: postgrest/postgrest
+  #   ports:
+  #     - "3000:3000"
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - postgres
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=zaq1
+      - GF_USERS_DEFAULT_THEME=dark
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      # - ./data/grafana/data:/var/lib/grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+
+volumes:
+  static:
