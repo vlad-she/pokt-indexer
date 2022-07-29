@@ -17,7 +17,13 @@ import logging
 import dns.resolver
 from urllib.parse import urlparse
 ##################
-THREADS_NUMBER = 1
+
+""" for syncing early blocks on beefy machines,
+there is batching/threading functionality, which is a arg in the entrypoint.sh
+file. It is currently set to 1 for stability.
+"""
+THREADS_NUMBER = 2
+
 POKT_RPC = "https://mainnet.gateway.pokt.network/v1/lb/62afb0c3123e6f003979d144"
 # utils.POKT_RPC = POKT_RPC
 
@@ -26,16 +32,8 @@ pokt_rpc = PoktRPCDataProvider(POKT_RPC)
 quit_event = threading.Event()
 signal.signal(signal.SIGTERM, lambda *_args: quit_event.set())
 
-
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-                    # handlers=[
-                    #     logging.FileHandler("poktwatch.log"),
-                    #     logging.StreamHandler()
-                    # ],
                     level=logging.INFO)
-
-
-
 
 # def update_mempool(retries: int):
 #     """ get all transactions in the mempool and add them to the database
@@ -77,30 +75,30 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
 #     return False
 
 
-def update_pulse(height: int, retries: int = 10):
-    """ update the Pulse section according to models.py
+# def update_pulse(height: int, retries: int = 10):
+#     """ update the Pulse section according to models.py
 
-    height - the height to update pulse at
-    retries - the allowance for an RPC request failure
+#     height - the height to update pulse at
+#     retries - the allowance for an RPC request failure
 
-    TODO: retries should be inside get_.....
-    """
-    while retries > 0:
-        try:
-            nodes = pokt_rpc.get_nodes(height=height, per_page=1).total_pages
-            apps = pokt_rpc.get_apps(height=height, per_page=1).total_pages
+#     TODO: retries should be inside get_.....
+#     """
+#     while retries > 0:
+#         try:
+#             nodes = pokt_rpc.get_nodes(height=height, per_page=1).total_pages
+#             apps = pokt_rpc.get_apps(height=height, per_page=1).total_pages
 
-            pulse = Pulse[1]
-            pulse.nodes = nodes
-            pulse.apps = apps
-            pulse.save()
+#             pulse = Pulse[1]
+#             pulse.nodes = nodes
+#             pulse.apps = apps
+#             pulse.save()
 
-            return True
-        except Exception as e:
-            logging.warning(f"Re-try update_pulse {e}", exc_info=True)
-            retries -= 1
+#             return True
+#         except Exception as e:
+#             logging.warning(f"Re-try update_pulse {e}", exc_info=True)
+#             retries -= 1
 
-    return False
+#     return False
 
 def sync_block(height: int, retries: int):
     """ add all Transactions of a block and the Block to the database
@@ -131,10 +129,10 @@ def sync_block(height: int, retries: int):
                 if t['msg_type'] == "claim":
                     relays += int(t['total_proofs'])
 
-            logging.info(f"Enreaching transactions with geo data for block: {height}")
-            flat_txs = add_geo_data(flat_txs)
+            # logging.info(f"Enreaching transactions with geo data for block: {height}")
+            # flat_txs = add_servicer_names(flat_txs)
 
-            logging.info(f"Transactions are inreached, saving to db block: {height}")
+            logging.info(f"Saving transactions to db, block: {height}")
             Transaction.insert_many(flat_txs).execute()
             Block.create(height=height, proposer=proposer, relays=relays,
                          txs=len(flat_txs), timestamp=timestamp)
@@ -153,10 +151,6 @@ def main():
     pokt_height = pokt_rpc.get_height()
     batch_height = pokt_height - (pokt_height % THREADS_NUMBER)
     for batch in range(state_height, batch_height, THREADS_NUMBER):
-        """ for syncing early blocks on beefy machines,
-        there is batching/threading functionality, which is a arg in the entrypoint.sh
-        file. It is currently set to 1 for stability.
-        """
         logging.info(f"Current height {State[1].height}")
 
         if quit_event.is_set():
@@ -166,6 +160,9 @@ def main():
             try:
                 threads = []
                 for block in range(batch, batch + THREADS_NUMBER):
+                    if block == 64500:
+                        print("June is loaded exiting ............")
+                        quit()
                     logging.info(f"Starting block: {block}")
                     x = Request(target=sync_block, args=(block, 10,))
                     x.start()
@@ -187,45 +184,45 @@ def main():
 
             transaction.commit()
 
-    while True:
-        # time.sleep(10)
-        state_height = State[1].height
-        pokt_height = pokt_rpc.get_height()
-        # if state_height - 1 == pokt_height:
-        #     with db.atomic() as transaction:
-        #         try:
-        #             logging.info("Updating mempool")
-        #             update_mempool(20)
-        #             logging.info("Mempool has been successfully updated")
-        #         except Exception as e:
-        #             logging.error("Mempool update has failed {}".format(e))
-        #             transaction.rollback()
-        #             quit()
+    # while True:
+    #     # time.sleep(10)
+    #     state_height = State[1].height
+    #     pokt_height = pokt_rpc.get_height()
+    #     # if state_height - 1 == pokt_height:
+    #     #     with db.atomic() as transaction:
+    #     #         try:
+    #     #             logging.info("Updating mempool")
+    #     #             update_mempool(20)
+    #     #             logging.info("Mempool has been successfully updated")
+    #     #         except Exception as e:
+    #     #             logging.error("Mempool update has failed {}".format(e))
+    #     #             transaction.rollback()
+    #     #             quit()
 
-        #         transaction.commit()
+    #     #         transaction.commit()
 
-        for block in range(state_height, pokt_height + 1):
-            logging.info(f"Syncing block: {block}")
-            if quit_event.is_set():
-                logging.info("Safely shutting down")
-                quit()
-            with db.atomic() as transaction:  # Opens new transaction.
-                try:
-                    sync_block(block, 20)
-                    update_pulse(block, 20)
-                    # update_mempool(20)
-                except Exception as e:
-                    logging.error(f"Failure to sync block: {e}", exc_info=True)
-                    transaction.rollback()
-                    quit()
+    #     for block in range(state_height, pokt_height + 1):
+    #         logging.info(f"Syncing block: {block}")
+    #         if quit_event.is_set():
+    #             logging.info("Safely shutting down")
+    #             quit()
+    #         with db.atomic() as transaction:  # Opens new transaction.
+    #             try:
+    #                 sync_block(block, 20)
+    #                 # update_pulse(block, 20)
+    #                 # update_mempool(20)
+    #             except Exception as e:
+    #                 logging.error(f"Failure to sync block: {e}", exc_info=True)
+    #                 transaction.rollback()
+    #                 quit()
 
-                logging.info(f"Successfully synced block {block}")
+    #             logging.info(f"Successfully synced block {block}")
 
-                transaction.commit()
+    #             transaction.commit()
 
-            state = State[1]
-            state.height = block + 1
-            state.save()
+    #         state = State[1]
+    #         state.height = block + 1
+    #         state.save()
 
 if __name__ == "__main__":
     main()

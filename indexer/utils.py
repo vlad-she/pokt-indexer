@@ -135,11 +135,11 @@ def flatten_tx(tx, RelaysToTokensMultiplier: int, timestamp):
         amount       = tx['stdTx']['msg']['value']['amount']
 
     elif message_type == "claim":
-        amount = int(tx['stdTx']['msg']['value']['total_proofs']) * RelaysToTokensMultiplier
         app_pub_key = tx['stdTx']['msg']['value']['header']['app_public_key'] # -> App_address
         chain = tx['stdTx']['msg']['value']['header']['chain']
         session_block_height = tx['stdTx']['msg']['value']['header']['session_height']
         total_proofs = int( tx['stdTx']['msg']['value']['total_proofs'])
+        amount = total_proofs * RelaysToTokensMultiplier
 
     elif message_type == "proof":
         app_pub_key = tx['stdTx']['msg']['value']['leaf']['value']['aat']['app_pub_key'] # -> App_address
@@ -181,30 +181,105 @@ def flatten_tx(tx, RelaysToTokensMultiplier: int, timestamp):
         "timestamp": timestamp
     }
 
-def add_geo_data(txs):
-    """
-        Enrich txs with geo data for claims
-        TODO: txs_n - shouldnt required
-    """
-    cannotresolve = 0
-    # Enrich txs with geo data
-    for t in txs:
-        if t['msg_type'] == "claim":
-            node = get_node_info(t['height'], t['signer'])
-            host = urlparse(node['service_url']).hostname
-            t['servicer_url'] = host[:60]
+# def add_servicer_names(txs):
+#     """
+#         Enrich txs with service names for claims
+#         TODO: txs_n - shouldnt required
+#     """
+#     for t in txs:
+#         if t['msg_type'] == "claim":
+#             node = get_node_info(t['height'], t['signer'])
+#             t['servicer_url'] = urlparse(node['service_url']).hostname[:60]
+#     return txs
+
+
+def get_geodata(
+    height: str,
+    node_address: str,
+):
+    GEO_API = f"http://ipwho.is/{ip}"
+
+    # GEO_API = f"https://ipapi.co/{ip}/json/"
+    CACHE_TTL = 7*96 # 96 blocks per day
+
+    try:
+        geoinfo = ServicersCache.get(ServicersCache.node_address == node_address)
+        if abs(ServicersCache.height - height) < CACHE_TTL:
+            return {
+                "service_url" : geoinfo.service_url,
+                "city" : geoinfo.city,
+                "region" : geoinfo.region,
+                "country" : geoinfo.country,
+                "latitude" : geoinfo.latitude,
+                "longitude" : geoinfo.longitude,
+                "org" : geoinfo.org,
+                "isp" : geoinfo.isp
+            }
+        else:
+            ServicersCache.delete().where(ServicersCache.node_address == node_address).execute()
+            raise Exception(f"Updating cached info for node_address: {node_address}")
+
+    except Exception as e:
+        # print("No CACHE for the ip", e)
+        t = dict()
+        node = get_node_info(height, node_address)
+        host = urlparse(node['service_url']).hostname
+        t.servicer_url = host[:60]
+        try:
+            # DNS to IP
+            ip = dns.resolver.resolve(host, 'A')[0].to_text()
+            #IP geolocation
+            geo_info = get_ip_geodata(ip=ip)
+
+            t.city = geo_info['city']
+            t.region = geo_info['region']
+            t.country = geo_info['country']
+            t.latitude = geo_info['latitude']
+            t.longitude = geo_info['longitude']
+            t.org = geo_info['org']
+            t.isp = geo_info['isp']
+
+        except dns.resolver.NXDOMAIN:
+            cannotresolve +=1
+
+        for i in range(retries):
             try:
-                # DNS to IP
-                ip = dns.resolver.resolve(host, 'A')[0].to_text()
-                #IP geolocation
-                geo_info = get_ip_geodata(ip=ip)
-                t.update(geo_info)
+                resp = requests.get(GEO_API, timeout=REQ_TIMEOUT)
 
-            except dns.resolver.NXDOMAIN:
-                cannotresolve +=1
+                if resp.status_code == 200 :
+                    geo_json = json.loads(resp.text)
+                    GeoCache.insert(
+                        ip_address=ip,
+                        timestamp=int(time.time()),
+                        city=geo_json['city'][:60],
+                        region=geo_json['region'][:60],
+                        country=geo_json['country'][:60],
+                        latitude=str(geo_json['latitude'])[:15],
+                        longitude=str(geo_json['longitude'])[:15],
+                        org=geo_json['connection']['org'][:60],
+                        isp=geo_json['connection']['isp'][:60]
+                    ).execute()
 
-    logging.warning(f"Couldnot resolve {cannotresolve} DNS names.")
-    return txs
+                    return {
+                        "city" : geo_json['city'][:60],
+                        "region" : geo_json['region'][:60],
+                        "country" : geo_json['country'][:60],
+                        "latitude" : str(geo_json['latitude'])[:15],
+                        "longitude" : str(geo_json['longitude'])[:15],
+                        "org" : geo_json['connection']['org'][:60],
+                        "isp" : geo_json['connection']['isp'][:60]
+                    }
+
+                else:
+                    raise Exception(f"get_ip_geolocation Reply status_code: {resp.status_code} != 200")
+            except Exception as e:
+                logging.warning(f"Failed to get_ip_geolocation, {e}")
+                time.sleep(random.randint(3, 7))
+
+    raise Exception(f"get_ip_geolocation failed, out of retries ip: {ip}, API: {GEO_API}")
+    quit()
+
+
 
 def get_ip_geodata(
     ip: str,
