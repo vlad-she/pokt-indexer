@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -41,29 +41,16 @@
           "custom": {
             "axisLabel": "",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
             }
           },
           "mappings": [],
@@ -91,6 +78,9 @@
       },
       "id": 4,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
         "legend": {
           "calcs": [
             "mean"
@@ -98,10 +88,15 @@
           "displayMode": "table",
           "placement": "right"
         },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xTickLabelRotation": -90,
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -168,7 +163,7 @@
         }
       ],
       "title": "Reward per Country",
-      "type": "timeseries"
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -183,29 +178,16 @@
           "custom": {
             "axisLabel": "",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
             }
           },
           "mappings": [],
@@ -233,19 +215,25 @@
       },
       "id": 6,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
         "legend": {
           "calcs": [
             "mean"
           ],
           "displayMode": "table",
-          "placement": "right",
-          "sortBy": "Mean",
-          "sortDesc": true
+          "placement": "right"
         },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -308,7 +296,7 @@
         }
       ],
       "title": "Total reward from relays",
-      "type": "timeseries"
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -323,29 +311,16 @@
           "custom": {
             "axisLabel": "",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
             }
           },
           "mappings": [],
@@ -374,19 +349,25 @@
       },
       "id": 2,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
         "legend": {
           "calcs": [
             "mean"
           ],
           "displayMode": "table",
-          "placement": "right",
-          "sortBy": "Mean",
-          "sortDesc": true
+          "placement": "right"
         },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
-        }
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -421,7 +402,7 @@
         }
       ],
       "title": "Reward per chain by Country",
-      "type": "timeseries"
+      "type": "barchart"
     }
   ],
   "refresh": false,
@@ -463,10 +444,18 @@
     "from": "2022-05-31T21:27:57.498Z",
     "to": "2022-06-02T07:15:23.409Z"
   },
-  "timepicker": {},
+  "timepicker": {
+    "refresh_intervals": [
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h"
+    ]
+  },
   "timezone": "",
-  "title": "Relays by Country",
+  "title": "Relays stat",
   "uid": "YthL9WzVz",
-  "version": 9,
+  "version": 1,
   "weekStart": ""
 }
