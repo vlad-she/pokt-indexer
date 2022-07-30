@@ -63,10 +63,10 @@ RUN git clone https://github.com/pokt-foundation/pypocket
 RUN pip install wheel
 RUN pip install -e ./pypocket
 
-COPY ./ /backend
+COPY ./ /app
 
-WORKDIR /backend
+WORKDIR /app
 
-COPY ./entrypoint.sh /
+# COPY ./entrypoint.sh /
 
-ENTRYPOINT ["sh", "/entrypoint.sh"]
+# ENTRYPOINT ["sh", "/entrypoint.sh"]
