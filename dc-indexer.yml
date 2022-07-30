@@ -6,12 +6,12 @@ services:
     build: ./indexer
     env_file:
       - .env
-    command: ["python", "app-gunicorn"]
+    command: ["python", "sync_txs.py"]
   indexer:
     container_name: indexer
     build: ./indexer
     env_file:
       - .env
-    command: ["python", "app-gunicorn"]
+    command: ["python", "add_geodata_to_txs.py"]
 volumes:
   static:
