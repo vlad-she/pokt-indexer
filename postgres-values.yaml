@@ -1,0 +1,51 @@
+## BITNAMI POSTGRES
+global:
+  storageClass: ""
+  postgresql:
+    auth:
+      postgresPassword: "postgres"
+
+## @param architecture PostgreSQL architecture (`standalone` or `replication`)
+##
+architecture: standalone
+
+## @section PostgreSQL Primary parameters
+##
+primary:
+  resources:
+    limits: {}
+    requests:
+      memory: 256Mi
+      cpu: 250m
+  # ## @param primary.hostAliases PostgreSQL primary pods host aliases
+  # ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  # ##
+  # hostAliases: []
+  # ## @param primary.hostNetwork Specify if host network should be enabled for PostgreSQL pod (postgresql primary)
+  # ##
+  # hostNetwork: false
+
+  # ## @param primary.nodeSelector Node labels for PostgreSQL primary pods assignment
+  # ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  # ##
+  # nodeSelector: {}
+
+  ## PostgreSQL Primary service configuration
+  ##
+  service:
+    ## @param primary.service.type Kubernetes Service type
+    ##
+    type: NodePort
+    nodePorts:
+      postgresql: "30432"
+  persistence:
+    enabled: true
+    existingClaim: "postgres-data"
+    # ## @param primary.persistence.storageClass PVC Storage Class for PostgreSQL Primary data volume
+    # ## If defined, storageClassName: <storageClass>
+    # ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    # ## If undefined (the default) or set to null, no storageClassName spec is
+    # ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    # ##   GKE, AWS & OpenStack)
+    # ##
+    # storageClass: "-"
