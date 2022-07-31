@@ -1,42 +1,38 @@
-# Default values for indexer.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-addgeodata:
-  env:
-  - name: POSTGRES_NAME
-    value: "10.10.1.170"
-  - name: POSTGRES_PORT
-    value: "30432"
-  - name: POSTGRES_USER
-    value: "postgres"
-  - name: POSTGRES_PASSWORD
-    value: "postgres"
-  - name: POSTGRES_DB
-    value: "postgres"
-  workingDir: /app
-  command: "python add_geodata_to_txs.py"
-
-blockindexer:
-  env:
-  - name: POSTGRES_NAME
-    value: "10.10.1.170"
-  - name: POSTGRES_PORT
-    value: "30432"
-  - name: POSTGRES_USER
-    value: "postgres"
-  - name: POSTGRES_PASSWORD
-    value: "postgres"
-  - name: POSTGRES_DB
-    value: "postgres"
-  workingDir: /app
-  command: "python sync_txs.py"
-
 image:
   repository: web3infra/pokt-indexer
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "22073103"
+
+addgeodata:
+  env:
+  - name: POSTGRES_NAME
+    value: "postgres-postgresql.postgres.svc.cluster.local"
+  - name: POSTGRES_PORT
+    value: "5432"
+  - name: POSTGRES_USER
+    value: "postgres"
+  - name: POSTGRES_PASSWORD
+    value: "postgres"
+  - name: POSTGRES_DB
+    value: "postgres"
+  workingDir: /app
+  command: "python add_geodata_to_txs.py --workers 5"
+
+blockindexer:
+  env:
+  - name: POSTGRES_NAME
+    value: "postgres-postgresql.postgres.svc.cluster.local"
+  - name: POSTGRES_PORT
+    value: "5432"
+  - name: POSTGRES_USER
+    value: "postgres"
+  - name: POSTGRES_PASSWORD
+    value: "postgres"
+  - name: POSTGRES_DB
+    value: "postgres"
+  workingDir: /app
+  command: "python sync_blocks_txs.py --workers 2"
 
 imagePullSecrets: []
 nameOverride: ""
