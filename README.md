@@ -1,3 +1,9 @@
+# Diffirence with https://github.com/fiagdao/poktwatch-indexer.git
+* migrating to k8s from docker-compose
+* added fields for node's geolocation
+* add grafana dashboards
+
+
 # POKTwatch
 
 An easy to use Python and Postgres indexer for Pocket Network
