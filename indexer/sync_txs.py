@@ -24,7 +24,8 @@ file. It is currently set to 1 for stability.
 """
 THREADS_NUMBER = 2
 
-POKT_RPC = "https://mainnet.gateway.pokt.network/v1/lb/62afb0c3123e6f003979d144"
+POKT_RPC = "https://https://pnfchains:dr8QMogkhDvQSFJaH6b4@pokt-dispatchers.europe-west3.poktnodes.network"
+#mainnet.gateway.pokt.network/v1/lb/62afb0c3123e6f003979d144"
 # utils.POKT_RPC = POKT_RPC
 
 pokt_rpc = PoktRPCDataProvider(POKT_RPC)

@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 ##################
 
 THREADS_NUMBER = 2
-BATCH_SIZE     = 5*96 # Number of transactions in one batch
+BATCH_SIZE     = 14*96 # Number of transactions in one batch
 
 quit_event = threading.Event()
 signal.signal(signal.SIGTERM, lambda *_args: quit_event.set())
