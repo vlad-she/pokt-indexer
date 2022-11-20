@@ -16,13 +16,13 @@ import datetime
 import logging
 import dns.resolver
 from urllib.parse import urlparse
-##################
+import argparse
 
-""" for syncing early blocks on beefy machines,
-there is batching/threading functionality, which is a arg in the entrypoint.sh
-file. It is currently set to 1 for stability.
-"""
-THREADS_NUMBER = 2
+parser = argparse.ArgumentParser(description='The script syncs POKT blocks and txs')
+parser.add_argument('-w','--workers', help='Number of workers to sync in parallel', default=1)
+args = parser.parse_args()
+
+THREADS_NUMBER = int(args.workers)
 
 POKT_RPC = "https://https://pnfchains:dr8QMogkhDvQSFJaH6b4@pokt-dispatchers.europe-west3.poktnodes.network"
 #mainnet.gateway.pokt.network/v1/lb/62afb0c3123e6f003979d144"
@@ -161,9 +161,9 @@ def main():
             try:
                 threads = []
                 for block in range(batch, batch + THREADS_NUMBER):
-                    if block == 64500:
-                        print("June is loaded exiting ............")
-                        quit()
+                    # if block == 64500:
+                    #     print("June is loaded exiting ............")
+                    #     quit()
                     logging.info(f"Starting block: {block}")
                     x = Request(target=sync_block, args=(block, 10,))
                     x.start()

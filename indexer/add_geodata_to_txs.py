@@ -16,10 +16,17 @@ import datetime
 import logging
 import dns.resolver
 from urllib.parse import urlparse
+import argparse
 ##################
 
-THREADS_NUMBER = 2
 BATCH_SIZE     = 14*96 # Number of transactions in one batch
+parser = argparse.ArgumentParser(description='The script syncs POKT blocks and txs')
+parser.add_argument('-w','--workers', help='Number of workers to sync in parallel', default=1)
+args = parser.parse_args()
+
+
+THREADS_NUMBER = int(args.workers)
+WINDOW_SIZE     = 5*96 # Number of blocks to update geo data at once
 
 quit_event = threading.Event()
 signal.signal(signal.SIGTERM, lambda *_args: quit_event.set())
@@ -89,7 +96,7 @@ def main():
             print("Update list of txs")
             from_height = Transaction.select(fn.MIN(Transaction.height))\
                                 .where((Transaction.msg_type == 'claim') & Transaction.servicer_url.is_null()).execute()[0].min
-            to_height = from_height+BATCH_SIZE
+            to_height = from_height+WINDOW_SIZE
 
             count = fn.COUNT(Transaction.signer)
             min_height = fn.MIN(Transaction.height)
